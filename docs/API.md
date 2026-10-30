@@ -7,13 +7,29 @@ OpenAPI 3.0 specification is served from `GET /openapi.json`, with Swagger UI at
 Create a payment with `POST /api/v1/payments`, header `Idempotency-Key: invoice-2026-001`, and body:
 
 ```json
-{"amount":"2500","currency":"KES","scenario":"success","description":"demo invoice"}
+{
+  "amount": "2500",
+  "currency": "KES",
+  "scenario": "success",
+  "description": "demo invoice"
+}
 ```
 
 A successful result is HTTP 201 with the shape:
 
 ```json
-{"data":{"id":"<uuid>","amount":"2500","currency":"KES","status":"SUCCEEDED","description":"demo invoice","providerTransactionId":"sim-<uuid>","createdAt":"<ISO8601>","updatedAt":"<ISO8601>"}}
+{
+  "data": {
+    "id": "<uuid>",
+    "amount": "2500",
+    "currency": "KES",
+    "status": "SUCCEEDED",
+    "description": "demo invoice",
+    "providerTransactionId": "sim-<uuid>",
+    "createdAt": "<ISO8601>",
+    "updatedAt": "<ISO8601>"
+  }
+}
 ```
 
 The ID and timestamps above are **placeholders, not output observed from a running server**. The same key+equivalent parsed input returns HTTP 201 and the **same payment ID** but may show a newer status. Another payload with that key returns 409. `GET /api/v1/payments?page=1&limit=20` returns `{data:[...],pagination:{page,limit,hasMore}}`. Limit range 1–100 and page range 1–10,000. `GET /api/v1/payments/:id` returns the same single payment shape.
@@ -39,7 +55,13 @@ The ID and timestamps above are **placeholders, not output observed from a runni
 For known client errors:
 
 ```json
-{"error":{"code":"CONFLICT","message":"Idempotency key reused with a different request","requestId":"<correlation-id>"}}
+{
+  "error": {
+    "code": "CONFLICT",
+    "message": "Idempotency key reused with a different request",
+    "requestId": "<correlation-id>"
+  }
+}
 ```
 
 The correlation ID comes from a safe `x-request-id` header value or a generated UUID. Other errors include `VALIDATION_ERROR`, `BAD_JSON`, `IDEMPOTENCY_KEY_REQUIRED`, `UNAUTHORIZED`, `NOT_FOUND` and `PAYLOAD_TOO_LARGE`. Unexpected exceptions are mapped to `500 INTERNAL_ERROR` with a generic message and no stack trace. Health `/health` is liveness only; `/ready` queries PostgreSQL and returns 503 when unavailable.

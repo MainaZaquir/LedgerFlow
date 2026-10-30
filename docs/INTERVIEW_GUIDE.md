@@ -23,7 +23,7 @@ For reconciliation, an imported CSV provider report is validated, matched on exa
 
 ## Key design principles to defend
 
-- The idempotency record controls *logical request identity*; a separate unique provider transaction controls *external operation identity*. Both are needed.
+- The idempotency record controls _logical request identity_; a separate unique provider transaction controls _external operation identity_. Both are needed.
 - The simulator's initial `SUCCEEDED`/`FAILED` state is durable before event processing, so `verify` can finish a known outcome without a second provider operation.
 - A timeout remains `PROCESSING`; it does not mean declined, failed or reversed.
 - Webhook receipt `RECEIVED`, processing `PROCESSED`, stale `IGNORED` and retryable `FAILED` are distinct.

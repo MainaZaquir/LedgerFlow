@@ -10,13 +10,13 @@
 
 Use `DATABASE_URL_TEST=postgresql://ledgerflow:local_dev_only@localhost:5432/ledgerflow_test?schema=public` for PostgreSQL integration tests. The helper refuses to truncate any URL lacking `ledgerflow_test`; cleanup truncates the test database's merchant table with dependent rows and reseeds two unique merchants. CI runs a PostgreSQL 16 service and sets the test connection string.
 
-| Layer | Assertions | What it cannot prove alone |
-| --- | --- | --- |
-| Unit | State transitions, amount limits, fingerprint canonicalization, HMAC verification, double-entry balancing, reconciliation classification, error codes. | Transaction locks or DB uniqueness. |
-| API + PostgreSQL | Bearer authentication, merchant scoping, JSON/error contracts, idempotent POST, successful/failed/held payments, cancellation, readiness and OpenAPI availability. | Live provider behavior. |
-| Concurrency + PostgreSQL | Eight same-key POST requests → one payment/provider operation/posting; simultaneous identical/different webhook events; competing ledger postings. | Distributed deployments or provider network races. |
-| Failure injection | Forged signature, invalid event references, ledger mutation triggers, negative DB amounts, deliberate invalid ledger row in transaction → full rollback. | Arbitrary infrastructure outages or process kills. |
-| Reconciliation | Complete mismatch dataset; duplicate report rows; missing internal/external; incomplete confirmed status; exception resolution and tenant isolation. | Real external provider report semantics. |
+| Layer                    | Assertions                                                                                                                                                         | What it cannot prove alone                         |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
+| Unit                     | State transitions, amount limits, fingerprint canonicalization, HMAC verification, double-entry balancing, reconciliation classification, error codes.             | Transaction locks or DB uniqueness.                |
+| API + PostgreSQL         | Bearer authentication, merchant scoping, JSON/error contracts, idempotent POST, successful/failed/held payments, cancellation, readiness and OpenAPI availability. | Live provider behavior.                            |
+| Concurrency + PostgreSQL | Eight same-key POST requests → one payment/provider operation/posting; simultaneous identical/different webhook events; competing ledger postings.                 | Distributed deployments or provider network races. |
+| Failure injection        | Forged signature, invalid event references, ledger mutation triggers, negative DB amounts, deliberate invalid ledger row in transaction → full rollback.           | Arbitrary infrastructure outages or process kills. |
+| Reconciliation           | Complete mismatch dataset; duplicate report rows; missing internal/external; incomplete confirmed status; exception resolution and tenant isolation.               | Real external provider report semantics.           |
 
 ## Actual verification status
 

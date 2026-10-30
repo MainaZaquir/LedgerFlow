@@ -16,18 +16,18 @@ Simulated funds only. No card numbers, banking credentials, customer PII, live m
 
 ## Threat scenarios
 
-| Threat | Current mitigation / limitation |
-| --- | --- |
-| Guessing API keys | High-entropy random tokens, SHA-256 lookup, throttling. No brute-force-resistant distributed gateway or dynamic lockout. |
-| Key leak | Logs redact `authorization`; revocation timestamp available via DB. CLI prints key once; operator is responsible for safe handling. |
-| Cross-merchant reads | Merchant-scoped Prisma filters and tests with two merchants. Database does not implement RLS. |
-| Forged provider event | HMAC verify before JSON parse, exact raw body and constant-time equality. Simulator secret compromise would defeat authenticity. |
-| Event replay | Provider/event ID uniqueness; processing locks; terminal payment state; ledger posting key uniqueness. |
-| Invalid or enormous input | Zod and parser size/count limits; file uploads not supported. |
-| Crash between payment and provider | Durable idempotency prevents a second payment; missing outbox worker requires operator recovery. |
-| Direct database writes | Only app-role behavior is tested in design; DB triggers prevent ledger updates/deletes, but DB grants and deferred balance constraints are not implemented. |
-| Denial of service | In-process limiter, body caps and indexed queries; no shared/edge limiter or resource-based quotas. |
-| Reconciliation misinformation | Never automatically adjusts payments/ledger; exception review is audited. Signed/attested provider report authenticity is out of scope. |
+| Threat                             | Current mitigation / limitation                                                                                                                             |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Guessing API keys                  | High-entropy random tokens, SHA-256 lookup, throttling. No brute-force-resistant distributed gateway or dynamic lockout.                                    |
+| Key leak                           | Logs redact `authorization`; revocation timestamp available via DB. CLI prints key once; operator is responsible for safe handling.                         |
+| Cross-merchant reads               | Merchant-scoped Prisma filters and tests with two merchants. Database does not implement RLS.                                                               |
+| Forged provider event              | HMAC verify before JSON parse, exact raw body and constant-time equality. Simulator secret compromise would defeat authenticity.                            |
+| Event replay                       | Provider/event ID uniqueness; processing locks; terminal payment state; ledger posting key uniqueness.                                                      |
+| Invalid or enormous input          | Zod and parser size/count limits; file uploads not supported.                                                                                               |
+| Crash between payment and provider | Durable idempotency prevents a second payment; missing outbox worker requires operator recovery.                                                            |
+| Direct database writes             | Only app-role behavior is tested in design; DB triggers prevent ledger updates/deletes, but DB grants and deferred balance constraints are not implemented. |
+| Denial of service                  | In-process limiter, body caps and indexed queries; no shared/edge limiter or resource-based quotas.                                                         |
+| Reconciliation misinformation      | Never automatically adjusts payments/ledger; exception review is audited. Signed/attested provider report authenticity is out of scope.                     |
 
 ## Improvements before production
 

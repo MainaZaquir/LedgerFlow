@@ -25,20 +25,20 @@ npm run dev                       # listens on http://localhost:3000
 
 ## 3. Actually executed checks
 
-| Check | Result |
-| --- | --- |
-| Node runtime inspection | PASS, Node `v22.16.0`, npm `10.9.2` |
-| Git repository initial commit | PASS, `54476d3` |
-| TypeScript source syntax parse | PASS, 35 source/test/script/config TS files parsed without syntax diagnostics at last check |
-| Pure rule execution | PASS, 10 Node assertions running transpiled actual domain modules |
-| JSON configuration parse | PASS for `package.json`, TypeScript configs and Prettier config |
-| Prisma model ↔ SQL table inventory | PASS, all 13 Prisma model names have SQL CREATE TABLE |
-| `npm install --package-lock-only --offline` | FAIL `ENOTCACHED` for `@prisma/client` |
-| `tsc --noEmit` | FAIL `TS2688`, `@types/node` unavailable |
-| `npm ci`, Prisma CLI generate/migrate | BLOCKED, npm registry DNS and missing packages/lockfile |
-| Lint/Prettier/build | BLOCKED, missing npm dependencies (not passed) |
-| Vitest unit/API/integration/concurrency tests | BLOCKED, npm packages and PostgreSQL absent (not passed) |
-| Container boot/CI execution | BLOCKED, Docker absent / CI not invoked |
+| Check                                         | Result                                                                                      |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Node runtime inspection                       | PASS, Node `v22.16.0`, npm `10.9.2`                                                         |
+| Git repository initial commit                 | PASS, `54476d3`                                                                             |
+| TypeScript source syntax parse                | PASS, 35 source/test/script/config TS files parsed without syntax diagnostics at last check |
+| Pure rule execution                           | PASS, 10 Node assertions running transpiled actual domain modules                           |
+| JSON configuration parse                      | PASS for `package.json`, TypeScript configs and Prettier config                             |
+| Prisma model ↔ SQL table inventory           | PASS, all 13 Prisma model names have SQL CREATE TABLE                                       |
+| `npm install --package-lock-only --offline`   | FAIL `ENOTCACHED` for `@prisma/client`                                                      |
+| `tsc --noEmit`                                | FAIL `TS2688`, `@types/node` unavailable                                                    |
+| `npm ci`, Prisma CLI generate/migrate         | BLOCKED, npm registry DNS and missing packages/lockfile                                     |
+| Lint/Prettier/build                           | BLOCKED, missing npm dependencies (not passed)                                              |
+| Vitest unit/API/integration/concurrency tests | BLOCKED, npm packages and PostgreSQL absent (not passed)                                    |
+| Container boot/CI execution                   | BLOCKED, Docker absent / CI not invoked                                                     |
 
 ## 4. Important authored tests
 
@@ -71,3 +71,9 @@ ACID transactions instead of distributed microservices; integer minor units rath
 ## 8. Next verification steps
 
 Run `npm install`, commit `package-lock.json`, apply migrations on a clean PostgreSQL database, execute typecheck/lint/Prettier/build, then run unit/integration/API/concurrency tests. Fix anything they reveal; follow with local startup, Swagger contract and demo workflow verification, Docker build and GitHub Actions. Finally update the evidence in `docs/BUILD_LOG.md` with actual output, not estimates.
+
+## 2026-10-30: verified local PostgreSQL acceptance checkpoint
+
+**Verified by the project owner on macOS Monterey:** Prisma client generation and migration deployment; successful application startup; 19/19 PostgreSQL integration/API tests; repeat full-suite result of 26/26 passing; typecheck, ESLint, Prettier and production TypeScript build passing; successful simulated payment/webhook/reconciliation demonstration; one exposed demo API key revoked; production dependency audit reporting zero vulnerabilities after controlled upgrades/overrides.
+
+**Caveats:** An intermittent reconciliation test failure (`401` rather than `409`) was not reproduced on rerun and should not be presumed fixed. `deepmerge-ts@8.0.1` is an upstream-version override and was tested only through the observed project checks. Developer-inclusive audit results and GitHub Actions execution have not been verified. The simulated platform is not certified, regulated or production-ready merely because these checks passed. See `docs/BUILD_LOG.md` for details.

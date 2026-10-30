@@ -2,11 +2,11 @@
 
 **Simplified accounting assumption:** On a confirmed successful charge of 2,500 KES minor units, LedgerFlow recognizes a receivable from the simulated provider and a liability to the merchant. It does **not** claim provider settlement, cash receipt, fees, payout, or bank reconciliation occurred.
 
-| Account | Debit | Credit |
-| --- | ---: | ---: |
-| `PROVIDER_CLEARING` (receivable) | 2500 | 0 |
-| `MERCHANT_PAYABLE` (liability) | 0 | 2500 |
-| **Totals** | **2500** | **2500** |
+| Account                          |    Debit |   Credit |
+| -------------------------------- | -------: | -------: |
+| `PROVIDER_CLEARING` (receivable) |     2500 |        0 |
+| `MERCHANT_PAYABLE` (liability)   |        0 |     2500 |
+| **Totals**                       | **2500** | **2500** |
 
 A ledger transaction has a unique `PAYMENT:<paymentId>:SUCCESS` posting key and a unique `paymentId`. Entries have positive `BIGINT` amounts and explicit matching currency. Posting is permitted only as part of the database transaction that changes a payment from `PROCESSING` to `SUCCEEDED`. Failed, cancelled, pending and processing payments have no successful-payment posting.
 

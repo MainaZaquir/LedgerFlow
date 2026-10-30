@@ -19,21 +19,21 @@ erDiagram
   Merchant ||--o{ AuditLog : records
 ```
 
-| Entity | Purpose / significant constraint |
-| --- | --- |
-| `Merchant` | Globally unique slug, root tenant identity. |
-| `ApiKey` | SHA-256 hash unique, merchant FK, optional revocation timestamp. No plaintext secret persisted. |
-| `Payment` | Merchant FK, amount `BIGINT` positive and ≤10^12, currency whitelist, state enum, created and updated timestamps, index `(merchantId,createdAt,id)`. |
-| `ProviderTransaction` | Globally unique `(provider,externalId)` and unique `paymentId`, persisted outcome. |
-| `IdempotencyRecord` | Unique `(merchantId,operation,key)`, fingerprint and payment FK; transaction lock serializes concurrent identical requests. |
-| `WebhookEvent` | Globally unique `(provider,eventId)`, receipt, attempts, status and sanitized failure text. It deliberately lacks a payment FK so malformed reference attempts can be durably recorded as failures. |
-| `LedgerTransaction` | Unique `paymentId`, unique posting key, currency, merchant FK; update/delete blocked with database triggers. |
-| `LedgerEntry` | Transaction FK, positive amount check, account whitelist and side enum; update/delete blocked with triggers. |
-| `ReconciliationImport` | Merchant FK, filename, provider and timestamp. |
-| `ProviderReportRow` | Import FK, unique `(importId,lineNumber)`, amount and currency checks, index `(importId,externalId)`; duplicate external IDs remain present for classification. |
-| `ReconciliationRun` | Unique `(merchantId,importId)` to prevent running the same import twice. |
-| `ReconciliationItem` | Optional payment/report row FKs, discrepancy enum, resolution text/timestamp, index `(runId,status)`. |
-| `AuditLog` | Merchant FK, timestamp, action, safe JSON details for cancellation and reconciliation actions. |
+| Entity                 | Purpose / significant constraint                                                                                                                                                                    |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Merchant`             | Globally unique slug, root tenant identity.                                                                                                                                                         |
+| `ApiKey`               | SHA-256 hash unique, merchant FK, optional revocation timestamp. No plaintext secret persisted.                                                                                                     |
+| `Payment`              | Merchant FK, amount `BIGINT` positive and ≤10^12, currency whitelist, state enum, created and updated timestamps, index `(merchantId,createdAt,id)`.                                                |
+| `ProviderTransaction`  | Globally unique `(provider,externalId)` and unique `paymentId`, persisted outcome.                                                                                                                  |
+| `IdempotencyRecord`    | Unique `(merchantId,operation,key)`, fingerprint and payment FK; transaction lock serializes concurrent identical requests.                                                                         |
+| `WebhookEvent`         | Globally unique `(provider,eventId)`, receipt, attempts, status and sanitized failure text. It deliberately lacks a payment FK so malformed reference attempts can be durably recorded as failures. |
+| `LedgerTransaction`    | Unique `paymentId`, unique posting key, currency, merchant FK; update/delete blocked with database triggers.                                                                                        |
+| `LedgerEntry`          | Transaction FK, positive amount check, account whitelist and side enum; update/delete blocked with triggers.                                                                                        |
+| `ReconciliationImport` | Merchant FK, filename, provider and timestamp.                                                                                                                                                      |
+| `ProviderReportRow`    | Import FK, unique `(importId,lineNumber)`, amount and currency checks, index `(importId,externalId)`; duplicate external IDs remain present for classification.                                     |
+| `ReconciliationRun`    | Unique `(merchantId,importId)` to prevent running the same import twice.                                                                                                                            |
+| `ReconciliationItem`   | Optional payment/report row FKs, discrepancy enum, resolution text/timestamp, index `(runId,status)`.                                                                                               |
+| `AuditLog`             | Merchant FK, timestamp, action, safe JSON details for cancellation and reconciliation actions.                                                                                                      |
 
 ## Money and cross-row integrity
 

@@ -41,12 +41,12 @@ docker compose up --build -d
 
 Base URL `http://localhost:3000`, API root `/api/v1`. Swagger UI: `http://localhost:3000/docs`. Raw OpenAPI: `http://localhost:3000/openapi.json`. Operational: `GET /health` and `GET /ready` (database query).
 
-| Area | Endpoints |
-| --- | --- |
-| Payments | `POST /payments`, `GET /payments`, `GET /payments/:id`, `POST /payments/:id/cancel`, `POST /payments/:id/verify` |
-| Provider webhook | `POST /webhooks/provider/simulator` (signature, **not** merchant bearer authentication) |
-| Ledger | `GET /ledger/transactions`, `GET /ledger/transactions/:id` |
-| Reconciliation | `POST /reconciliation/imports`, `POST /reconciliation/runs`, `GET /reconciliation/runs/:id`, `GET /reconciliation/exceptions`, `POST /reconciliation/exceptions/:id/resolve` |
+| Area             | Endpoints                                                                                                                                                                    |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Payments         | `POST /payments`, `GET /payments`, `GET /payments/:id`, `POST /payments/:id/cancel`, `POST /payments/:id/verify`                                                             |
+| Provider webhook | `POST /webhooks/provider/simulator` (signature, **not** merchant bearer authentication)                                                                                      |
+| Ledger           | `GET /ledger/transactions`, `GET /ledger/transactions/:id`                                                                                                                   |
+| Reconciliation   | `POST /reconciliation/imports`, `POST /reconciliation/runs`, `GET /reconciliation/runs/:id`, `GET /reconciliation/exceptions`, `POST /reconciliation/exceptions/:id/resolve` |
 
 `/payments` and `/ledger/...` in the table are relative to `/api/v1`.
 
@@ -131,7 +131,7 @@ Read subsystem documentation under `docs/`, especially `DECISIONS.md` and `INTER
 - Cannot claim dependencies, Prisma migration, runtime startup, CI, lint, build, or database tests passed in the authoring environment; no PostgreSQL/Docker/registry DNS access was available.
 - Missing generated npm lockfile blocks `npm ci`, Docker build and CI until created on a connected system.
 - No live payment provider, settlement banking, refunds, dispute handling, payout engine, cross-currency conversion, financial fee model, FX, accounting period close, or real webhook transport queue.
-- Webhook retry relies on signed redelivery (or deterministic recovery on the terminal simulator status); no background worker scans failed webhook rows. Arrival ordering between *different valid terminal outcomes* is resolved first-committed-wins.
+- Webhook retry relies on signed redelivery (or deterministic recovery on the terminal simulator status); no background worker scans failed webhook rows. Arrival ordering between _different valid terminal outcomes_ is resolved first-committed-wins.
 - In-memory per-process throttling is local-dev-only, not distributed protection. API key issuance uses an operator CLI instead of a separate admin IAM service.
 - Ledger balancing is checked in application code with an atomic database transaction; PostgreSQL constrains entry amounts, uniqueness, and immutability but does **not** enforce cross-row balancing. A trusted writer bypassing the service could insert unbalanced rows.
 - Reconciliation uses exact external transaction identifiers only and assumes the imported report covers the intended period; it has no date-range snapshot boundary or rule for late provider reports. One run per import.
