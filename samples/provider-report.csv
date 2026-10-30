@@ -1,0 +1,5 @@
+provider_transaction_id,amount,currency,status,timestamp
+sim-replace-with-payment-uuid,2500,KES,SUCCEEDED,2026-10-29T10:00:00.000Z
+sim-unknown-provider-transaction,800,KES,SUCCEEDED,2026-10-29T10:01:00.000Z
+sim-duplicate,100,KES,SUCCEEDED,2026-10-29T10:02:00.000Z
+sim-duplicate,100,KES,SUCCEEDED,2026-10-29T10:03:00.000Z

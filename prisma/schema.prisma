@@ -1,0 +1,222 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+enum ProviderStatus {
+  UNKNOWN
+  ACCEPTED
+  SUCCEEDED
+  FAILED
+}
+enum WebhookStatus {
+  RECEIVED
+  PROCESSED
+  IGNORED
+  FAILED
+}
+enum PostingSide {
+  DEBIT
+  CREDIT
+}
+enum ReconciliationStatus {
+  MATCHED
+  MISSING_PROVIDER
+  MISSING_INTERNAL
+  AMOUNT_MISMATCH
+  CURRENCY_MISMATCH
+  STATUS_MISMATCH
+  DUPLICATE_PROVIDER
+  AMBIGUOUS
+}
+
+model Merchant {
+  id           String @id @default(uuid())
+  slug         String @unique
+  name         String
+  createdAt    DateTime @default(now())
+  apiKeys      ApiKey[]
+  payments     Payment[]
+  providerTxns ProviderTransaction[]
+  idempotency  IdempotencyRecord[]
+  ledgerTxns   LedgerTransaction[]
+  imports      ReconciliationImport[]
+  runs         ReconciliationRun[]
+  auditLogs    AuditLog[]
+}
+
+model ApiKey {
+  id         String @id @default(uuid())
+  merchantId String
+  merchant   Merchant @relation(fields: [merchantId], references: [id])
+  label      String
+  hash       String @unique
+  createdAt  DateTime @default(now())
+  revokedAt  DateTime?
+  @@index([merchantId])
+}
+
+model Payment {
+  id         String @id @default(uuid())
+  merchantId String
+  merchant   Merchant @relation(fields: [merchantId], references: [id])
+  amount     BigInt
+  currency   String @db.VarChar(3)
+  status     PaymentStatus @default(PENDING)
+  description String? @db.VarChar(200)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  providerTxn ProviderTransaction?
+  idempotency IdempotencyRecord[]
+  ledgerTxn LedgerTransaction?
+  reconItems ReconciliationItem[]
+  @@index([merchantId, createdAt, id])
+}
+
+model ProviderTransaction {
+  id         String @id @default(uuid())
+  merchantId String
+  merchant   Merchant @relation(fields: [merchantId], references: [id])
+  paymentId  String @unique
+  payment    Payment @relation(fields: [paymentId], references: [id])
+  provider   String
+  externalId String
+  status     ProviderStatus @default(UNKNOWN)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  @@unique([provider, externalId])
+  @@index([merchantId, provider])
+}
+
+model IdempotencyRecord {
+  id          String @id @default(uuid())
+  merchantId  String
+  merchant    Merchant @relation(fields: [merchantId], references: [id])
+  operation   String
+  key         String @db.VarChar(128)
+  fingerprint String @db.VarChar(64)
+  paymentId   String
+  payment     Payment @relation(fields: [paymentId], references: [id])
+  statusCode  Int @default(201)
+  createdAt   DateTime @default(now())
+  @@unique([merchantId, operation, key])
+  @@index([createdAt])
+}
+
+model WebhookEvent {
+  id          String @id @default(uuid())
+  provider    String
+  eventId     String
+  paymentId   String
+  externalId  String
+  outcome     String
+  status      WebhookStatus @default(RECEIVED)
+  attempts    Int @default(0)
+  error       String?
+  receivedAt  DateTime @default(now())
+  processedAt DateTime?
+  @@unique([provider, eventId])
+  @@index([status, receivedAt])
+}
+
+model LedgerTransaction {
+  id         String @id @default(uuid())
+  merchantId String
+  merchant   Merchant @relation(fields: [merchantId], references: [id])
+  paymentId  String @unique
+  payment    Payment @relation(fields: [paymentId], references: [id])
+  postingKey String @unique
+  currency   String @db.VarChar(3)
+  createdAt  DateTime @default(now())
+  entries    LedgerEntry[]
+  @@index([merchantId, createdAt])
+}
+
+model LedgerEntry {
+  id            String @id @default(uuid())
+  transactionId String
+  transaction   LedgerTransaction @relation(fields: [transactionId], references: [id])
+  account       String
+  side          PostingSide
+  amount        BigInt
+  currency      String @db.VarChar(3)
+  @@index([transactionId])
+}
+
+model ReconciliationImport {
+  id         String @id @default(uuid())
+  merchantId String
+  merchant   Merchant @relation(fields: [merchantId], references: [id])
+  provider   String
+  filename   String @db.VarChar(200)
+  createdAt  DateTime @default(now())
+  rows       ProviderReportRow[]
+  runs       ReconciliationRun[]
+  @@index([merchantId, createdAt])
+}
+
+model ProviderReportRow {
+  id          String @id @default(uuid())
+  importId    String
+  importFile  ReconciliationImport @relation(fields: [importId], references: [id])
+  lineNumber  Int
+  externalId  String
+  amount      BigInt
+  currency    String @db.VarChar(3)
+  status      ProviderStatus
+  occurredAt  DateTime
+  items       ReconciliationItem[]
+  @@unique([importId, lineNumber])
+  @@index([importId, externalId])
+}
+
+model ReconciliationRun {
+  id         String @id @default(uuid())
+  merchantId String
+  merchant   Merchant @relation(fields: [merchantId], references: [id])
+  importId   String
+  importFile ReconciliationImport @relation(fields: [importId], references: [id])
+  createdAt  DateTime @default(now())
+  items      ReconciliationItem[]
+  @@unique([merchantId, importId])
+  @@index([merchantId, createdAt])
+}
+
+model ReconciliationItem {
+  id          String @id @default(uuid())
+  runId       String
+  run         ReconciliationRun @relation(fields: [runId], references: [id])
+  paymentId   String?
+  payment     Payment? @relation(fields: [paymentId], references: [id])
+  reportRowId String?
+  reportRow   ProviderReportRow? @relation(fields: [reportRowId], references: [id])
+  externalId  String
+  status      ReconciliationStatus
+  detail      String
+  resolution  String? @db.VarChar(500)
+  resolvedAt  DateTime?
+  @@index([runId, status])
+  @@index([paymentId])
+}
+
+model AuditLog {
+  id         String @id @default(uuid())
+  merchantId String
+  merchant   Merchant @relation(fields: [merchantId], references: [id])
+  action     String
+  targetId   String
+  detail     Json
+  createdAt  DateTime @default(now())
+  @@index([merchantId, createdAt])
+}

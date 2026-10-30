@@ -1,0 +1,48 @@
+/** Hand-maintained contract, checked against route inventory in tests. */
+const errorResponses = {
+    '400': { description: 'Invalid request', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+    '401': { description: 'Authentication failed', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+    '404': { description: 'Resource not found', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+    '409': { description: 'Conflict', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+    '500': { description: 'Unexpected server error (no stack trace)', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+};
+const security = [{ ApiKey: [] }];
+const paymentResponse = { description: 'Payment', content: { 'application/json': { schema: { type: 'object', properties: { data: { $ref: '#/components/schemas/Payment' } } } } } };
+const idParam = { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } };
+const pagination = [{ name: 'page', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 10000, default: 1 } }, { name: 'limit', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100, default: 20 } }];
+const reconciledItem = { type: 'object', properties: { id: { type: 'string', format: 'uuid' }, status: { type: 'string', enum: ['MATCHED', 'MISSING_PROVIDER', 'MISSING_INTERNAL', 'AMOUNT_MISMATCH', 'CURRENCY_MISMATCH', 'STATUS_MISMATCH', 'DUPLICATE_PROVIDER', 'AMBIGUOUS'] }, detail: { type: 'string' }, resolution: { type: 'string', nullable: true }, resolvedAt: { type: 'string', nullable: true, format: 'date-time' } } };
+export const openapi = {
+    openapi: '3.0.3', info: { title: 'LedgerFlow API', version: '1.0.0', description: 'Simulated payments only. Monetary amounts are integer minor units encoded as decimal strings. All merchant resources are scoped to a bearer API key.' },
+    servers: [{ url: 'http://localhost:3000' }],
+    components: {
+        securitySchemes: { ApiKey: { type: 'http', scheme: 'bearer', bearerFormat: 'lf_test_<base64url>' } },
+        schemas: {
+            Error: { type: 'object', required: ['error'], properties: { error: { type: 'object', required: ['code', 'message'], properties: { code: { type: 'string' }, message: { type: 'string' }, requestId: { type: 'string' } } } }, example: { error: { code: 'CONFLICT', message: 'Idempotency key reused with a different request', requestId: 'req_abc' } } },
+            Payment: { type: 'object', required: ['id', 'amount', 'currency', 'status'], properties: { id: { type: 'string', format: 'uuid' }, amount: { type: 'string', pattern: '^[1-9][0-9]{0,12}$', example: '2500' }, currency: { type: 'string', enum: ['KES', 'USD', 'JPY', 'KWD'] }, status: { type: 'string', enum: ['PENDING', 'PROCESSING', 'SUCCEEDED', 'FAILED', 'CANCELLED'] }, description: { type: 'string', nullable: true }, providerTransactionId: { type: 'string', nullable: true }, createdAt: { type: 'string', format: 'date-time' }, updatedAt: { type: 'string', format: 'date-time' } } },
+            PaymentInput: { type: 'object', additionalProperties: false, required: ['amount', 'currency'], properties: { amount: { type: 'string', pattern: '^[1-9][0-9]{0,12}$', example: '2500', description: '1 to 1,000,000,000,000 minor units' }, currency: { type: 'string', enum: ['KES', 'USD', 'JPY', 'KWD'] }, description: { type: 'string', maxLength: 200 }, scenario: { type: 'string', enum: ['success', 'failure', 'processing', 'timeout', 'timeout-after-accept', 'hold'], default: 'success' } } },
+            ImportInput: { type: 'object', required: ['filename', 'provider', 'csv'], additionalProperties: false, properties: { filename: { type: 'string', example: 'provider-october.csv' }, provider: { type: 'string', enum: ['simulator'] }, csv: { type: 'string', maxLength: 100000, description: 'UTF-8 CSV; exact columns: provider_transaction_id,amount,currency,status,timestamp. Maximum 1,000 rows.' } } },
+            Webhook: { type: 'object', additionalProperties: false, required: ['eventId', 'paymentId', 'externalId', 'outcome'], properties: { eventId: { type: 'string' }, paymentId: { type: 'string', format: 'uuid' }, externalId: { type: 'string' }, outcome: { type: 'string', enum: ['SUCCEEDED', 'FAILED'] } } },
+            ReconciliationItem: reconciledItem
+        }
+    },
+    paths: {
+        '/health': { get: { tags: ['Operations'], summary: 'Liveness', responses: { '200': { description: 'Process alive' } } } },
+        '/ready': { get: { tags: ['Operations'], summary: 'Database readiness', responses: { '200': { description: 'Database ready' }, '503': { description: 'Database unavailable' } } } },
+        '/openapi.json': { get: { tags: ['Operations'], summary: 'Raw OpenAPI specification', responses: { '200': { description: 'Specification' } } } },
+        '/api/v1/payments': {
+            post: { tags: ['Payments'], security, summary: 'Create an idempotent simulated payment', parameters: [{ name: 'Idempotency-Key', in: 'header', required: true, schema: { type: 'string', minLength: 8, maxLength: 128 } }], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/PaymentInput' }, example: { amount: '2500', currency: 'KES', scenario: 'success' } } } }, responses: { '201': paymentResponse, ...errorResponses } },
+            get: { tags: ['Payments'], security, summary: 'List own payments', parameters: pagination, responses: { '200': { description: 'Paginated payments' }, ...errorResponses } }
+        },
+        '/api/v1/payments/{id}': { get: { tags: ['Payments'], security, summary: 'Get own payment', parameters: [idParam], responses: { '200': paymentResponse, ...errorResponses } } },
+        '/api/v1/payments/{id}/cancel': { post: { tags: ['Payments'], security, summary: 'Cancel a PENDING payment only', parameters: [idParam], responses: { '200': paymentResponse, ...errorResponses } } },
+        '/api/v1/payments/{id}/verify': { post: { tags: ['Payments'], security, summary: 'Recover a durable terminal provider outcome without resubmitting', parameters: [idParam], responses: { '200': paymentResponse, ...errorResponses } } },
+        '/api/v1/webhooks/provider/{provider}': { post: { tags: ['Webhooks'], summary: 'Simulator HMAC-SHA256 signed webhook', description: 'Sign exact raw JSON bytes, x-simulator-signature = sha256=<lowercase hex>. No merchant bearer token; signature is the authentication.', parameters: [{ name: 'provider', in: 'path', required: true, schema: { type: 'string', enum: ['simulator'] } }, { name: 'x-simulator-signature', in: 'header', required: true, schema: { type: 'string', pattern: '^sha256=[a-f0-9]{64}$' } }], requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/Webhook' } } } }, responses: { '200': { description: 'Durably processed or ignored duplicate/stale event' }, '400': errorResponses['400'], '401': errorResponses['401'], '409': errorResponses['409'], '500': errorResponses['500'] } } },
+        '/api/v1/ledger/transactions': { get: { tags: ['Ledger'], security, summary: 'List immutable merchant ledger transactions', parameters: pagination, responses: { '200': { description: 'Transactions with decimal-string entry amounts' }, ...errorResponses } } },
+        '/api/v1/ledger/transactions/{id}': { get: { tags: ['Ledger'], security, summary: 'Get own ledger transaction and entries', parameters: [idParam], responses: { '200': { description: 'Posted transaction' }, ...errorResponses } } },
+        '/api/v1/reconciliation/imports': { post: { tags: ['Reconciliation'], security, summary: 'Import validated CSV as JSON string', requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/ImportInput' } } } }, responses: { '201': { description: 'Imported report ID and count' }, ...errorResponses } } },
+        '/api/v1/reconciliation/runs': { post: { tags: ['Reconciliation'], security, summary: 'Compare imported report with own provider records', requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['importId'], additionalProperties: false, properties: { importId: { type: 'string', format: 'uuid' } } } } } }, responses: { '201': { description: 'Created reconciliation run' }, ...errorResponses } } },
+        '/api/v1/reconciliation/runs/{id}': { get: { tags: ['Reconciliation'], security, summary: 'Inspect own reconciliation run and items', parameters: [idParam], responses: { '200': { description: 'Run with classified report entries' }, ...errorResponses } } },
+        '/api/v1/reconciliation/exceptions': { get: { tags: ['Reconciliation'], security, summary: 'List own reconciliation exceptions', parameters: [...pagination, { name: 'unresolved', in: 'query', schema: { type: 'string', enum: ['true', 'false'], default: 'true' } }], responses: { '200': { description: 'Paginated exceptions' }, ...errorResponses } } },
+        '/api/v1/reconciliation/exceptions/{id}/resolve': { post: { tags: ['Reconciliation'], security, summary: 'Add audited resolution note; never edit payment or ledger', parameters: [idParam], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['resolution'], additionalProperties: false, properties: { resolution: { type: 'string', minLength: 5, maxLength: 500 } } } } } }, responses: { '200': { description: 'Resolved exception' }, ...errorResponses } } }
+    }
+} as const;
