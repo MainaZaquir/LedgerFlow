@@ -15,6 +15,8 @@ import {
 } from "../../src/modules/webhooks/service.js";
 import { matchReport } from "../../src/modules/reconciliation/matcher.js";
 import { AppError } from "../../src/shared/errors/AppError.js";
+
+
 describe("domain invariants", () => {
   it("restricts payment state transitions and terminal state mutation", () => {
     expect(canTransition("PENDING", "PROCESSING")).toBe(true);

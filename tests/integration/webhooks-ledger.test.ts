@@ -4,6 +4,7 @@ import { db, reset, secret } from "../helpers/db.js";
 import { createApp } from "../../src/app.js";
 import { signWebhook } from "../../src/modules/webhooks/service.js";
 import { postSuccess } from "../../src/modules/ledger/service.js";
+
 const app = createApp(db, { secret, simulatorEnabled: true });
 let keys: Awaited<ReturnType<typeof reset>>;
 beforeEach(async () => {

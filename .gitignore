@@ -6,3 +6,5 @@ coverage/
 !.env.example
 *.log
 .DS_Store
+INTERVIEW_GUIDE.md
+API.md

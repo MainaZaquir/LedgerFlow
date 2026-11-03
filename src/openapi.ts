@@ -1,4 +1,3 @@
-/** Hand-maintained contract, checked against route inventory in tests. */
 const errorResponses = {
   "400": {
     description: "Invalid request",

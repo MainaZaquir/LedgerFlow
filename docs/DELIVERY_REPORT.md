@@ -11,7 +11,7 @@ TypeScript/Node 22 Express modular monolith with Prisma/PostgreSQL relational sc
 ## 2. How to run (requires network-enabled Node/Docker host)
 
 ```bash
-cp .env.example .env             # change the webhook signing secret
+cp .env             
 npm install                      # generate package-lock.json, then commit it
 npm run db:generate
 docker compose up -d db
@@ -74,6 +74,6 @@ Run `npm install`, commit `package-lock.json`, apply migrations on a clean Postg
 
 ## 2026-10-30: verified local PostgreSQL acceptance checkpoint
 
-**Verified by the project owner on macOS Monterey:** Prisma client generation and migration deployment; successful application startup; 19/19 PostgreSQL integration/API tests; repeat full-suite result of 26/26 passing; typecheck, ESLint, Prettier and production TypeScript build passing; successful simulated payment/webhook/reconciliation demonstration; one exposed demo API key revoked; production dependency audit reporting zero vulnerabilities after controlled upgrades/overrides.
+**Verified by the project owner Maina Zaquir:** Prisma client generation and migration deployment; successful application startup; 19/19 PostgreSQL integration/API tests; repeat full-suite result of 26/26 passing; typecheck, ESLint, Prettier and production TypeScript build passing; successful simulated payment/webhook/reconciliation demonstration; one exposed demo API key revoked; production dependency audit reporting zero vulnerabilities after controlled upgrades/overrides.
 
 **Caveats:** An intermittent reconciliation test failure (`401` rather than `409`) was not reproduced on rerun and should not be presumed fixed. `deepmerge-ts@8.0.1` is an upstream-version override and was tested only through the observed project checks. Developer-inclusive audit results and GitHub Actions execution have not been verified. The simulated platform is not certified, regulated or production-ready merely because these checks passed. See `docs/BUILD_LOG.md` for details.

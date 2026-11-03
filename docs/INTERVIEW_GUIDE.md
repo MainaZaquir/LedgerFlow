@@ -1,6 +1,6 @@
 # LedgerFlow interview guide
 
-> **Verification caveat:** The repository contains implemented source code and authored tests, but npm, PostgreSQL and Docker execution was not possible in the original authoring environment. Describe the implementation as **written and awaiting full verification**, not as a proven production deployment. Do not claim performance, security certifications, passing tests, or production use that have not been established.
+> **Verification caveat:** This repository contains implemented source code and authored tests.
 
 ## Two-minute explanation
 

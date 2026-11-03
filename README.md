@@ -8,14 +8,14 @@
 
 Express routes and Zod validation → merchant services → Prisma transactions → PostgreSQL. The deterministic simulator durably reserves one provider operation per payment. Signed webhooks and recovered provider outcomes share transactionally safe payment-state and ledger-posting logic. Reconciliation imports CSV data and classifies mismatches without rewriting historical transactions.
 
-For deeper explanation, read [architecture](docs/ARCHITECTURE.md), [data model](docs/DATA_MODEL.md), and [interview guide](docs/INTERVIEW_GUIDE.md).
+For deeper explanation, read [architecture](docs/ARCHITECTURE.md), and [data model](docs/DATA_MODEL.md).
 
 ## Prerequisites and start
 
 Node.js 22+, npm, Docker with Docker Compose v2. Use only **local development credentials** and replace the example webhook secret.
 
 ```bash
-cp .env.example .env
+cp .env
 # Edit SIMULATOR_WEBHOOK_SECRET to a random 32+ character value.
 npm install                        # generates package-lock.json if missing
 npm run db:generate
